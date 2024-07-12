@@ -1,0 +1,82 @@
+@page "/auth"
+@using IHttpClientsSN
+@using Models
+@inject IAuthHttpClient AuthHttpClient
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+
+<h3>@(isRegistering ? "Register" : "Login")</h3>
+
+<EditForm Model="@(isRegistering ? (object)registerUser : loginUser)" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (isRegistering)
+    {
+        <InputText @bind-Value="registerUser.Username" placeholder="Username" />
+        <InputText type="password" @bind-Value="registerUser.PasswordHash" placeholder="Password" />
+        <InputText @bind-Value="registerUser.Email" placeholder="Email" />
+        <InputText @bind-Value="registerUser.FirstName" placeholder="First Name" />
+        <InputText @bind-Value="registerUser.LastName" placeholder="Last Name" />
+        <InputText @bind-Value="registerUser.ProfilePicture" placeholder="Profile Picture URL" />
+    }
+    else
+    {
+        <InputText @bind-Value="loginUser.Username" placeholder="Username" />
+        <InputText type="password" @bind-Value="loginUser.PasswordHash" placeholder="Password" />
+    }
+
+    <button type="submit">@submitButtonText</button>
+</EditForm>
+
+<button @onclick="ToggleForm">@toggleButtonText</button>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    private RegisterUser registerUser = new RegisterUser();
+    private LoginUser loginUser = new LoginUser();
+    private bool isRegistering = true;
+    private string message = string.Empty;
+
+    private string submitButtonText => isRegistering ? "Register" : "Login";
+    private string toggleButtonText => isRegistering ? "Switch to Login" : "Switch to Register";
+
+    private async Task HandleValidSubmit()
+    {
+        if (isRegistering)
+        {
+            try
+            {
+                var token = await AuthHttpClient.RegisterUserAsync(registerUser);
+                await LocalStorage.SetItemAsync("authToken", token);
+                message = "Registration successful.";
+            }
+            catch (Exception ex)
+            {
+                message = $"Registration failed: {ex.Message}";
+            }
+        }
+        else
+        {
+            try
+            {
+                var token = await AuthHttpClient.LoginUserAsync(loginUser);
+                await LocalStorage.SetItemAsync("authToken", token);
+                message = "Login successful.";
+            }
+            catch (Exception ex)
+            {
+                message = $"Login failed: {ex.Message}";
+            }
+        }
+    }
+
+    private void ToggleForm()
+    {
+        isRegistering = !isRegistering;
+        message = string.Empty; // Clear any messages
+    }
+}
