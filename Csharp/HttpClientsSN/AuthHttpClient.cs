@@ -1,6 +1,7 @@
 ﻿using IHttpClientsSN;
 using Microsoft.Extensions.Configuration;
 using Models;
+using Models.UserManagement;
 
 namespace HttpClientsSN;
 

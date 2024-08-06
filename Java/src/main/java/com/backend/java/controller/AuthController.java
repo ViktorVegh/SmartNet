@@ -1,8 +1,9 @@
 package com.backend.java.controller;
 
 import com.backend.java.model.User;
-import com.backend.java.service.UserService;
+import com.backend.java.iservice.IAuthService;
 import com.backend.java.jwt_token.JwtUtil;
+import com.backend.java.iservice.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +14,10 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 public class AuthController {
     @Autowired
-    private UserService userService;
+    private IAuthService authService;
+
+    @Autowired
+    private IUserService userService;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -26,7 +30,7 @@ public class AuthController {
         if (userService.findByEmail(user.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email is already taken");
         }
-        User registeredUser = userService.registerUser(user);
+        User registeredUser = authService.registerUser(user);
         String token = jwtUtil.generateToken(registeredUser.getId());
 
         return ResponseEntity.ok(token);
@@ -35,7 +39,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody User user) {
         Optional<User> existingUser = userService.findByUsername(user.getUsername());
-        if (existingUser.isPresent() && userService.validatePassword(user.getPasswordHash(), existingUser.get().getPasswordHash())) {
+        if (existingUser.isPresent() && authService.validatePassword(user.getPasswordHash(), existingUser.get().getPasswordHash())) {
             String token = jwtUtil.generateToken(existingUser.get().getId());
             return ResponseEntity.ok(token);
         } else {
@@ -43,23 +47,4 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/user/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable Long id) {
-        Optional<User> user = userService.findById(id);
-        if (user.isPresent()) {
-            return ResponseEntity.ok(user.get());
-        } else {
-            return ResponseEntity.status(404).body("User not found");
-        }
-    }
-
-    @GetMapping("/user/username/{username}")
-    public ResponseEntity<?> getUserByUsername(@PathVariable String username) {
-        Optional<User> user = userService.findByUsername(username);
-        if (user.isPresent()) {
-            return ResponseEntity.ok(user.get());
-        } else {
-            return ResponseEntity.status(404).body("User not found");
-        }
-    }
 }

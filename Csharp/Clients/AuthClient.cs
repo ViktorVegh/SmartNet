@@ -2,7 +2,7 @@
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using IClients;
-using Models;
+using Models.UserManagement;
 
 namespace Clients
 {
@@ -30,15 +30,6 @@ namespace Clients
             return await response.Content.ReadAsStringAsync();
         }
 
-        public async Task<User> GetUserByUsernameAsync(string username)
-        {
-            var response = await _httpClient.GetAsync($"{_javaBackendUrl}/api/auth/user/username/{username}");
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<User>();
-            }
-
-            return null;
-        }
+        
     }
 }

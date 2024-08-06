@@ -1,0 +1,134 @@
+@using BlazorAppSN.Services
+@using Models
+@using Models.DTOs
+@inject UrlParserService UrlParserService
+@inject ILogger<LearningMaterialModal> Logger
+@inject IHttpClientsSN.ILearningMaterialHttpClient LearningMaterialHttpClient
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager Navigation
+
+<div class="modal" @onclick="CloseModal">
+    <div class="modal-content" @onclick:stopPropagation="true">
+        <span class="close" @onclick="CloseModal">&times;</span>
+        <div class="learning-material-details">
+            @if (isEditMode)
+            {
+                <EditForm Model="@editLearningMaterial" OnValidSubmit="HandleUpdate">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <InputText @bind-Value="editLearningMaterial.Headline" placeholder="Headline" />
+                    <InputText @bind-Value="editLearningMaterial.Description" placeholder="Description" />
+
+                    @foreach (var content in editLearningMaterial.Contents)
+                    {
+                        @if (content is PodcastContent podcastContent)
+                        {
+                            <InputText @bind-Value="podcastContent.AudioUrl" placeholder="Audio URL" />
+                            <InputNumber @bind-Value="podcastContent.Duration" placeholder="Duration" />
+                        }
+                        else if (content is TextContent textContent)
+                        {
+                            <InputTextArea @bind-Value="textContent.Body" placeholder="Body" />
+                        }
+                        else if (content is PhotoContent photoContent)
+                        {
+                            <InputText @bind-Value="photoContent.ImageUrl" placeholder="Image URL" />
+                        }
+                        else if (content is VideoContent videoContent)
+                        {
+                            <InputText @bind-Value="videoContent.VideoUrl" placeholder="Video URL" />
+                            <InputNumber @bind-Value="videoContent.Duration" placeholder="Duration" />
+                        }
+                    }
+
+                    <button type="submit" class="save-button">Save</button>
+                    <button type="button" @onclick="CancelEdit" class="cancel-button">Cancel</button>
+                </EditForm>
+            }
+            else
+            {
+                var createLearningMaterial = TransformToCreateLearningMaterial(LearningMaterial);
+                <h2>@LearningMaterial.Headline</h2>
+                <p>@LearningMaterial.Description</p>
+                @foreach (var content in LearningMaterial.Contents)
+                {
+                    <PreviewContent LearningMaterial="@createLearningMaterial" SelectedContentType="All" />
+                }
+
+                @if (IsOwner)
+                {
+                    <button class="edit-button" @onclick="EnableEditMode">Edit</button>
+                    <button class="delete-button" @onclick="DeleteMaterial">Delete</button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public LearningMaterial LearningMaterial { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public bool IsOwner { get; set; } = false;
+
+    private bool isEditMode = false;
+    private LearningMaterial editLearningMaterial;
+
+    private void CloseModal()
+    {
+        OnClose.InvokeAsync(null);
+    }
+
+    private void EnableEditMode()
+    {
+        isEditMode = true;
+        editLearningMaterial = new LearningMaterial
+        {
+            Id = LearningMaterial.Id,
+            Headline = LearningMaterial.Headline,
+            Description = LearningMaterial.Description,
+            UserId = LearningMaterial.UserId,
+            Contents = LearningMaterial.Contents
+        };
+    }
+
+    private void CancelEdit()
+    {
+        isEditMode = false;
+    }
+
+    private async Task HandleUpdate()
+    {
+        var token = await LocalStorage.GetItemAsync<string>("authToken");
+        await LearningMaterialHttpClient.UpdateLearningMaterialAsync(editLearningMaterial.Id, editLearningMaterial, token);
+        LearningMaterial.Headline = editLearningMaterial.Headline;
+        LearningMaterial.Description = editLearningMaterial.Description;
+        LearningMaterial.Contents = editLearningMaterial.Contents;
+        isEditMode = false;
+        Console.WriteLine("Content was updated");
+        StateHasChanged();
+    }
+
+    private async Task DeleteMaterial()
+    {
+        var token = await LocalStorage.GetItemAsync<string>("authToken");
+        await LearningMaterialHttpClient.DeleteLearningMaterialAsync(LearningMaterial.Id, token);
+        Console.WriteLine("Content was deleted");
+        CloseModal();
+        // Making sure content is no longer available
+        Navigation.NavigateTo("/UserProfile", true);
+    }
+
+    private CreateLearningMaterial TransformToCreateLearningMaterial(LearningMaterial learningMaterial)
+    {
+        return new CreateLearningMaterial
+        {
+            Headline = learningMaterial.Headline,
+            Description = learningMaterial.Description,
+            UserId = learningMaterial.UserId,
+            Contents = learningMaterial.Contents.ToList()
+        };
+    }
+}
+
+

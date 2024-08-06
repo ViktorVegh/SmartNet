@@ -1,15 +1,27 @@
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
+using IClients;
+using IServices;
+using Models.UserManagement;
+using Moq;
+using Services;
+using Xunit;
 
 namespace XUnitTestSN
 {
     public class AuthServiceTests
     {
         private readonly Mock<IAuthClient> _authClientMock;
+        private readonly Mock<IUserService> _userServiceMock;
         private readonly AuthService _authService;
 
         public AuthServiceTests()
         {
             _authClientMock = new Mock<IAuthClient>();
-            _authService = new AuthService(_authClientMock.Object);
+            _userServiceMock = new Mock<IUserService>();
+            _authService = new AuthService(_authClientMock.Object, _userServiceMock.Object);
         }
 
         [Fact]
@@ -27,7 +39,7 @@ namespace XUnitTestSN
             };
 
             var token = "test_token";
-            _authClientMock.Setup(client => client.GetUserByUsernameAsync(registerUser.Username)).ReturnsAsync((User)null);
+            _userServiceMock.Setup(service => service.GetUserByUsernameAsync(registerUser.Username)).ReturnsAsync((User)null);
             _authClientMock.Setup(client => client.RegisterUserAsync(registerUser)).ReturnsAsync(token);
 
             // Act
@@ -52,7 +64,7 @@ namespace XUnitTestSN
             };
 
             var existingUser = new User { Username = "existinguser" };
-            _authClientMock.Setup(client => client.GetUserByUsernameAsync(registerUser.Username)).ReturnsAsync(existingUser);
+            _userServiceMock.Setup(service => service.GetUserByUsernameAsync(registerUser.Username)).ReturnsAsync(existingUser);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() => _authService.RegisterUserAsync(registerUser));
@@ -71,7 +83,7 @@ namespace XUnitTestSN
 
             var token = "test_token";
             var existingUser = new User { Username = "testuser", PasswordHash = "password123" };
-            _authClientMock.Setup(client => client.GetUserByUsernameAsync(loginUser.Username)).ReturnsAsync(existingUser);
+            _userServiceMock.Setup(service => service.GetUserByUsernameAsync(loginUser.Username)).ReturnsAsync(existingUser);
             _authClientMock.Setup(client => client.LoginUserAsync(loginUser)).ReturnsAsync(token);
 
             // Act
@@ -91,7 +103,7 @@ namespace XUnitTestSN
                 PasswordHash = "password123"
             };
 
-            _authClientMock.Setup(client => client.GetUserByUsernameAsync(loginUser.Username)).ReturnsAsync((User)null);
+            _userServiceMock.Setup(service => service.GetUserByUsernameAsync(loginUser.Username)).ReturnsAsync((User)null);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() => _authService.LoginUserAsync(loginUser));
@@ -109,7 +121,7 @@ namespace XUnitTestSN
             };
 
             var existingUser = new User { Username = "testuser", PasswordHash = "correctpassword" };
-            _authClientMock.Setup(client => client.GetUserByUsernameAsync(loginUser.Username)).ReturnsAsync(existingUser);
+            _userServiceMock.Setup(service => service.GetUserByUsernameAsync(loginUser.Username)).ReturnsAsync(existingUser);
             _authClientMock.Setup(client => client.LoginUserAsync(loginUser)).Throws(new HttpRequestException(null, null, System.Net.HttpStatusCode.Unauthorized));
 
             // Act & Assert

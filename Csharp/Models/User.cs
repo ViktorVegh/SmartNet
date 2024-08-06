@@ -11,4 +11,5 @@ public class User
     public string ProfilePicture { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public List<LearningMaterial> LearningMaterials { get; set; }
 }

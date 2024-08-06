@@ -1,5 +1,6 @@
 namespace WebApiSN.Controllers;
 using IServices;
+using Models.UserManagement;
 using Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;

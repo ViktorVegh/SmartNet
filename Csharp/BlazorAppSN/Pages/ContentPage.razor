@@ -1,0 +1,67 @@
+@page "/ContentPage"
+@using Models
+@using Models.DTOs
+@inject IHttpClientsSN.ILearningMaterialHttpClient LearningMaterialHttpClient
+
+<NavMenu />
+
+<h3>All Learning Materials</h3>
+
+@if (learningMaterials != null)
+{
+    <div class="learning-materials-container">
+        <div class="materials-container">
+            @foreach (var material in learningMaterials)
+            {
+                var createLearningMaterialDto = TransformToCreateLearningMaterial(material);
+
+                <div class="material-item">
+                    <PreviewContent LearningMaterial="@createLearningMaterialDto" SelectedContentType="All" />
+                    <button class="open-button" @onclick="() => OpenModal(material)">Open</button>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@if (showModal)
+{
+    <LearningMaterialModal LearningMaterial="@selectedMaterial" OnClose="CloseModal" IsOwner="false" />
+}
+
+@code {
+    private List<LearningMaterial> learningMaterials;
+    private bool showModal = false;
+    private LearningMaterial selectedMaterial;
+
+    protected override async Task OnInitializedAsync()
+    {
+        learningMaterials = await LearningMaterialHttpClient.GetAllLearningMaterialsAsync();
+    }
+
+    private void OpenModal(LearningMaterial material)
+    {
+        selectedMaterial = material;
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private CreateLearningMaterial TransformToCreateLearningMaterial(LearningMaterial learningMaterial)
+    {
+        return new CreateLearningMaterial
+        {
+            Headline = learningMaterial.Headline,
+            Description = learningMaterial.Description,
+            UserId = learningMaterial.UserId,
+            Contents = learningMaterial.Contents.ToList()
+        };
+    }
+}

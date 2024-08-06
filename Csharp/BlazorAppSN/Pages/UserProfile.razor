@@ -1,0 +1,117 @@
+@page "/UserProfile"
+@page "/UserProfile/{Username}"
+@inject IHttpClientsSN.IUserHttpClient UserHttpClient
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@using Models
+@using System.Net.Http
+@using Models.DTOs
+
+<NavMenu />
+
+<h3>User Profile</h3>
+
+@if (user != null)
+{
+    <div class="profile-container">
+        <img src="@user.ProfilePicture" alt="Profile Picture" class="profile-picture" />
+        <h4>@user.Username</h4>
+    </div>
+
+    <h3>Learning Materials</h3>
+    <div class="learning-materials-container">
+        @if (user.LearningMaterials != null && user.LearningMaterials.Any())
+        {
+            <div class="materials-container">
+                @foreach (var material in user.LearningMaterials)
+                {
+                    var createLearningMaterialDto = new CreateLearningMaterial
+                    {
+                        Headline = material.Headline,
+                        Description = material.Description,
+                        UserId = material.UserId,
+                        Contents = material.Contents.ToList()
+                    };
+
+                    <div class="material-item">
+                        <PreviewContent LearningMaterial="@createLearningMaterialDto" SelectedContentType="All" />
+                        <button class="open-button" @onclick="() => OpenModal(material, true)">Open</button>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p>No learning materials found.</p>
+        }
+    </div>
+}
+
+@if (showModal)
+{
+    <LearningMaterialModal LearningMaterial="@selectedMaterial" OnClose="CloseModal" IsOwner="isOwner" />
+}
+
+
+
+@code {
+    [Parameter] public string? Username { get; set; }
+    private User user;
+    private bool showModal = false;
+    private LearningMaterial selectedMaterial; 
+    private bool isOwner = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(Username))
+            {
+                user = await UserHttpClient.GetUserByUsernameAsync(Username);
+                isOwner = false; 
+            }
+            else
+            {
+                var token = await LocalStorage.GetItemAsync<string>("authToken");
+                Console.WriteLine($"Retrieved token: {token}"); // Log the token
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    throw new InvalidOperationException("Token is null or empty");
+                }
+
+                user = await UserHttpClient.GetUserByTokenAsync(token);
+                isOwner = true; // Owner's profile
+            }
+
+            
+            Console.WriteLine($"Retrieved {user?.LearningMaterials?.Count} learning materials.");
+            foreach (var material in user.LearningMaterials)
+            {
+                Console.WriteLine($"Material: {material.Headline}, Description: {material.Description}, Contents Count: {material.Contents.Count}");
+            }
+
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.Error.WriteLine($"Error fetching user profile: {ex.Message}");
+            user = null;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Unexpected error: {ex.Message}");
+            user = null;
+        }
+    }
+
+    private void OpenModal(LearningMaterial material, bool isOwner)
+    {
+        selectedMaterial = material;
+        this.isOwner = isOwner;
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+}

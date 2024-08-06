@@ -1,0 +1,191 @@
+@page "/create-content"
+@using Models
+@using Models.DTOs
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject IHttpClientsSN.ILearningMaterialHttpClient LearningMaterialHttpClient
+
+<NavMenu />
+
+<div class="centered-container">
+    @if (string.IsNullOrEmpty(selectedContentType))
+    {
+        <h1>Create Learning Material</h1>
+        <div class="content-types-container">
+            <div class="content-type" @onclick='() => SelectContentType("Podcast")'>
+                <img src="images/podcast-icon.png" alt="Podcast" class="content-icon" />
+                <p>Podcast</p>
+            </div>
+            <div class="content-type" @onclick='() => SelectContentType("Text")'>
+                <img src="images/text-icon.png" alt="Text" class="content-icon" />
+                <p>Text</p>
+            </div>
+            <div class="content-type" @onclick='() => SelectContentType("Photo")'>
+                <img src="images/photo-icon.png" alt="Photo" class="content-icon" />
+                <p>Photo</p>
+            </div>
+            <div class="content-type" @onclick='() => SelectContentType("Video")'>
+                <img src="images/video-icon.png" alt="Video" class="content-icon" />
+                <p>Video</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <EditForm Model="@learningMaterial" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-container">
+                <button type="button" class="back-button" @onclick='() => SelectContentType(null)'>Back</button>
+                <button type="submit" class="save-button">Save</button>
+
+                <div class="form-fields">
+                    <h1>Create @selectedContentType</h1>
+                    <InputText @bind-Value="learningMaterial.Headline" placeholder="Headline" />
+                    <InputText @bind-Value="learningMaterial.Description" placeholder="Description" />
+
+                    @if (selectedContentType == "Podcast")
+                    {
+                        <InputText @bind-Value="currentPodcastContent.AudioUrl" placeholder="Audio URL" @oninput="UpdatePodcastContent" />
+                        <InputNumber @bind-Value="currentPodcastContent.Duration" placeholder="Duration" @oninput="UpdatePodcastContent" />
+                    }
+                    else if (selectedContentType == "Text")
+                    {
+                        <InputTextArea @bind-Value="currentTextContent.Body" placeholder="Body" @oninput="UpdateTextContent" />
+                    }
+                    else if (selectedContentType == "Photo")
+                    {
+                        <InputText @bind-Value="currentPhotoContent.ImageUrl" placeholder="Image URL" @oninput="UpdatePhotoContent" />
+                    }
+                    else if (selectedContentType == "Video")
+                    {
+                        <InputText @bind-Value="currentVideoContent.VideoUrl" placeholder="Video URL" @oninput="UpdateVideoContent" />
+                        <InputNumber @bind-Value="currentVideoContent.Duration" placeholder="Duration" @oninput="UpdateVideoContent" />
+                    }
+                </div>
+
+                <div class="form-preview">
+                    <h1>Preview</h1>
+                    <PreviewContent LearningMaterial="@learningMaterial" SelectedContentType="@selectedContentType" />
+                </div>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private string? selectedContentType = null;
+    private CreateLearningMaterial learningMaterial = new CreateLearningMaterial();
+    private PodcastContent currentPodcastContent = new PodcastContent();
+    private TextContent currentTextContent = new TextContent();
+    private PhotoContent currentPhotoContent = new PhotoContent();
+    private VideoContent currentVideoContent = new VideoContent();
+
+    private async Task HandleSubmit()
+    {
+        var token = await LocalStorage.GetItemAsync<string>("authToken");
+        
+        learningMaterial.Contents.Clear();
+
+        if (selectedContentType == "Podcast")
+        {
+            Console.WriteLine($"Adding podcast content: {currentPodcastContent.AudioUrl}");
+            learningMaterial.Contents.Add(currentPodcastContent);
+        }
+        else if (selectedContentType == "Text")
+        {
+            Console.WriteLine($"Adding text content: {currentTextContent.Body}");
+            learningMaterial.Contents.Add(currentTextContent);
+        }
+        else if (selectedContentType == "Photo")
+        {
+            Console.WriteLine($"Adding photo content: {currentPhotoContent.ImageUrl}");
+            learningMaterial.Contents.Add(currentPhotoContent);
+        }
+        else if (selectedContentType == "Video")
+        {
+            Console.WriteLine($"Adding video content: {currentVideoContent.VideoUrl}");
+            learningMaterial.Contents.Add(currentVideoContent);
+        }
+
+        var response = await LearningMaterialHttpClient.AddLearningMaterialAsync(learningMaterial, token);
+
+        if (response != null)
+        {
+            ClearForms();
+            Navigation.NavigateTo("/UserProfile");
+        }
+        else
+        {
+            Console.WriteLine("Error creating learning material");
+        }
+    }
+
+    private void SelectContentType(string contentType)
+    {
+        selectedContentType = contentType;
+        Console.WriteLine($"Selected content type: {selectedContentType}");
+        ClearForms();
+        StateHasChanged();
+    }
+
+    private void ClearForms()
+    {
+        learningMaterial = new CreateLearningMaterial();
+        currentPodcastContent = new PodcastContent();
+        currentTextContent = new TextContent();
+        currentPhotoContent = new PhotoContent();
+        currentVideoContent = new VideoContent();
+    }
+
+    private void UpdatePodcastContent(ChangeEventArgs e)
+    {
+        currentPodcastContent.AudioUrl = e.Value.ToString();
+        Console.WriteLine($"Updated podcast content: {currentPodcastContent.AudioUrl}");
+        UpdatePreview();
+    }
+
+    private void UpdateTextContent(ChangeEventArgs e)
+    {
+        currentTextContent.Body = e.Value.ToString();
+        Console.WriteLine($"Updated text content: {currentTextContent.Body}");
+        UpdatePreview();
+    }
+
+    private void UpdatePhotoContent(ChangeEventArgs e)
+    {
+        currentPhotoContent.ImageUrl = e.Value.ToString();
+        Console.WriteLine($"Updated photo content: {currentPhotoContent.ImageUrl}");
+        UpdatePreview();
+    }
+
+    private void UpdateVideoContent(ChangeEventArgs e)
+    {
+        currentVideoContent.VideoUrl = e.Value.ToString();
+        Console.WriteLine($"Updated video content: {currentVideoContent.VideoUrl}");
+        UpdatePreview();
+    }
+
+    private void UpdatePreview()
+    {
+        learningMaterial.Contents.Clear();
+        if (selectedContentType == "Podcast")
+        {
+            learningMaterial.Contents.Add(currentPodcastContent);
+        }
+        else if (selectedContentType == "Text")
+        {
+            learningMaterial.Contents.Add(currentTextContent);
+        }
+        else if (selectedContentType == "Photo")
+        {
+            learningMaterial.Contents.Add(currentPhotoContent);
+        }
+        else if (selectedContentType == "Video")
+        {
+            learningMaterial.Contents.Add(currentVideoContent);
+        }
+        StateHasChanged();
+    }
+}

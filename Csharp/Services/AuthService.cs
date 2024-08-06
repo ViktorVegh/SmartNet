@@ -3,16 +3,19 @@ using System.Threading.Tasks;
 using IClients;
 using IServices;
 using Models;
+using Models.UserManagement;
 
 namespace Services
 {
     public class AuthService : IAuthService
     {
         private readonly IAuthClient _authClient;
+        private readonly IUserService _userService;
 
-        public AuthService(IAuthClient authClient)
+        public AuthService(IAuthClient authClient, IUserService userService)
         {
             _authClient = authClient;
+            _userService = userService;
         }
 
         public async Task<string> RegisterUserAsync(RegisterUser user)
@@ -20,7 +23,7 @@ namespace Services
             ValidateRegisterUser(user);
 
             
-            var existingUser = await _authClient.GetUserByUsernameAsync(user.Username);
+            var existingUser = await _userService.GetUserByUsernameAsync(user.Username);
             if (existingUser != null)
             {
                 throw new ArgumentException("Username already exists.", nameof(user.Username));
@@ -32,7 +35,7 @@ namespace Services
         public async Task<string> LoginUserAsync(LoginUser user)
         {
             ValidateLoginUser(user);
-            var existingUser = await _authClient.GetUserByUsernameAsync(user.Username);
+            var existingUser = await _userService.GetUserByUsernameAsync(user.Username);
             if (existingUser == null)
             {
                 throw new ArgumentException("Username does not exist.", nameof(user.Username));

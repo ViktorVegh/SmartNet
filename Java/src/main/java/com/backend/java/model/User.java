@@ -2,12 +2,12 @@ package com.backend.java.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
 public class User {
     @Id
-
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -30,6 +30,8 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "user")
+    private List<LearningMaterial> learningMaterials;
 
     public Long getId() {
         return id;
@@ -101,5 +103,13 @@ public class User {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<LearningMaterial> getLearningMaterials() {
+        return learningMaterials;
+    }
+
+    public void setLearningMaterials(List<LearningMaterial> learningMaterials) {
+        this.learningMaterials = learningMaterials;
     }
 }

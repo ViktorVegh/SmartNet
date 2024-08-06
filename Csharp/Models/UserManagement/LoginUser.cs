@@ -1,4 +1,4 @@
-namespace Models
+namespace Models.UserManagement
 {
     public class LoginUser
     {

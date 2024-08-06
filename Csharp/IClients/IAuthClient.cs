@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Models;
+using Models.UserManagement;
 
 namespace IClients
 {
@@ -7,7 +8,7 @@ namespace IClients
     {
         Task<string> RegisterUserAsync(RegisterUser user);
         Task<string> LoginUserAsync(LoginUser user);
-        Task<User> GetUserByUsernameAsync(string username);
+        
     }
 }
 

@@ -1,0 +1,145 @@
+@using BlazorAppSN.Services
+@using Models
+@using Models.DTOs
+@inject UrlParserService UrlParserService
+@inject ILogger<PreviewContent> Logger
+
+@code {
+    [Parameter] public CreateLearningMaterial LearningMaterial { get; set; }
+    [Parameter] public string SelectedContentType { get; set; }
+
+    private string GetEmbedUrl(string url)
+    {
+        return UrlParserService?.GetEmbedUrl(url) ?? url;
+    }
+
+    private bool IsDirectImageUrl(string url)
+    {
+        return UrlParserService?.IsDirectImageUrl(url) ?? false;
+    }
+
+    private bool IsRecognizedUrl(string url)
+    {
+        return UrlParserService?.IsRecognizedUrl(url) ?? false;
+    }
+
+    private string GetContentContainerClass(bool hasContent)
+    {
+        return hasContent ? "content-container no-border" : "content-container";
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        Logger.LogInformation($"Selected content type: {SelectedContentType}");
+        
+        Logger.LogInformation($"Number of content items: {LearningMaterial?.Contents?.Count ?? 0}");
+        foreach (var content in LearningMaterial.Contents)
+        {
+            switch (content)
+            {
+                case PodcastContent podcastContent:
+                    Logger.LogInformation($"Podcast content retrieved: {podcastContent.AudioUrl}");
+                    break;
+                case TextContent textContent:
+                    Logger.LogInformation($"Text content retrieved: {textContent.Body}");
+                    break;
+                case PhotoContent photoContent:
+                    Logger.LogInformation($"Photo content retrieved: {photoContent.ImageUrl}");
+                    break;
+                case VideoContent videoContent:
+                    Logger.LogInformation($"Video content retrieved: {videoContent.VideoUrl}");
+                    break;
+                default:
+                    Logger.LogWarning($"Unknown content type: {content.GetType().Name}");
+                    break;
+            }
+        }
+    }
+}
+
+<div class="preview-container">
+    <div class="preview-field headline-description-container">
+        <p class="headline">@(!string.IsNullOrEmpty(LearningMaterial.Headline) ? LearningMaterial.Headline : "Headline")</p>
+        <span> | </span>
+        <p class="description">@(!string.IsNullOrEmpty(LearningMaterial.Description) ? LearningMaterial.Description : "Description")</p>
+    </div>
+
+    @foreach (var content in LearningMaterial.Contents)
+    {
+        if (content is PodcastContent podcastContent)
+        {
+            <div class="@GetContentContainerClass(!string.IsNullOrEmpty(podcastContent?.AudioUrl) && IsRecognizedUrl(podcastContent.AudioUrl))">
+                @if (string.IsNullOrEmpty(podcastContent?.AudioUrl))
+                {
+                    <p class="content-label">Podcast</p>
+                }
+                else if (!string.IsNullOrEmpty(podcastContent.AudioUrl) && IsRecognizedUrl(podcastContent.AudioUrl))
+                {
+                    <audio controls>
+                        <source src="@GetEmbedUrl(podcastContent.AudioUrl)" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                }
+                else if (!string.IsNullOrEmpty(podcastContent.AudioUrl))
+                {
+                    <p>Unsupported podcast URL format: <a href="@podcastContent.AudioUrl" target="_blank">@podcastContent.AudioUrl</a></p>
+                }
+            </div>
+        }
+        else if (content is TextContent textContent)
+        {
+            <div class="content-container">
+                @if (string.IsNullOrEmpty(textContent?.Body))
+                {
+                    <p class="content-label">Text</p>
+                }
+                else
+                {
+                    <p class="body-text">@textContent.Body</p>
+                }
+            </div>
+        }
+        else if (content is PhotoContent photoContent)
+        {
+            <div class="@GetContentContainerClass(!string.IsNullOrEmpty(photoContent?.ImageUrl) && IsDirectImageUrl(photoContent.ImageUrl))">
+                @if (string.IsNullOrEmpty(photoContent?.ImageUrl))
+                {
+                    <p class="content-label">Photo</p>
+                }
+                else if (IsDirectImageUrl(photoContent.ImageUrl))
+                {
+                    <img src="@photoContent.ImageUrl" alt="Photo Preview" class="preview-image"/>
+                }
+                else
+                {
+                    <p>Unsupported image URL format: <a href="@photoContent.ImageUrl" target="_blank">@photoContent.ImageUrl</a></p>
+                }
+            </div>
+        }
+        else if (content is VideoContent videoContent)
+        {
+            <div class="@GetContentContainerClass(!string.IsNullOrEmpty(videoContent?.VideoUrl) && IsRecognizedUrl(videoContent.VideoUrl))">
+                @if (string.IsNullOrEmpty(videoContent?.VideoUrl))
+                {
+                    <p class="content-label">Video</p>
+                }
+                else if (IsRecognizedUrl(videoContent.VideoUrl))
+                {
+                    <iframe class="preview-video" src="@GetEmbedUrl(videoContent.VideoUrl)" frameborder="0" allowfullscreen></iframe>
+                }
+                else
+                {
+                    <p>Unsupported video URL format: <a href="@videoContent.VideoUrl" target="_blank">@videoContent.VideoUrl</a></p>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="content-container">
+                <p>Unsupported content type</p>
+            </div>
+        }
+    }
+</div>

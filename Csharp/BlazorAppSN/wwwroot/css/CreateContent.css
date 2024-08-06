@@ -1,0 +1,104 @@
+.centered-container {
+    width: 75%;
+    margin: 0 auto; 
+    text-align: center;
+    padding: 20px;
+    border-radius: 20px; 
+    background-color: rgba(255, 255, 255, 0.2); 
+    color: black; 
+}
+
+.content-types-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap; 
+    margin-top: 20px;
+}
+
+.content-type {
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+    flex: 1 1 calc(25% - 20px); 
+    margin: 10px;
+    max-width: 150px; 
+}
+
+.content-type:hover {
+    transform: scale(1.05);
+}
+
+.content-icon {
+    width: 100%;
+    height: auto;
+    max-width: 100px; 
+    display: block;
+    margin: 0 auto;
+}
+
+.content-type p {
+    margin-top: 10px;
+    font-size: 1.2em;
+}
+
+button {
+    background-color: black;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 20px; 
+}
+
+button:hover {
+    background-color: darkgray;
+}
+
+.form-container {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    background-color: rgba(0, 0, 0, 0.8); 
+    border-radius: 20px; 
+    padding: 60px 20px 20px 20px; 
+    margin-top: 20px;
+    color: white; 
+    gap: 20px; 
+    align-items: flex-start; 
+}
+
+.back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+
+.save-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.form-fields, .form-preview {
+    flex: 1;
+    padding: 20px;
+}
+
+.form-fields {
+    background-color: rgba(255, 255, 255, 0.0); 
+    border-radius: 10px;
+}
+
+.form-fields input, .form-fields textarea {
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid white;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.0);
+    color: white; 
+}
+
+.form-fields input::placeholder, .form-fields textarea::placeholder {
+    color: white;
+}
