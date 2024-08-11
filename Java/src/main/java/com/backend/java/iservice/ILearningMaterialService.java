@@ -1,6 +1,6 @@
 package com.backend.java.iservice;
 
-import com.backend.java.model.CreateLearningMaterial;
+import com.backend.java.model.DTOs.CreateLearningMaterial;
 import com.backend.java.model.LearningMaterial;
 
 import java.util.List;

@@ -3,78 +3,88 @@
 @using Models.DTOs
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
-@inject IHttpClientsSN.ILearningMaterialHttpClient LearningMaterialHttpClient
+@inject IWebSocketService.ILearningMaterialWebSocketService LearningMaterialWebSocketService
 
 <NavMenu />
 
 <div class="centered-container">
-    @if (string.IsNullOrEmpty(selectedContentType))
+    @if (isAuthenticated)
     {
-        <h1>Create Learning Material</h1>
-        <div class="content-types-container">
-            <div class="content-type" @onclick='() => SelectContentType("Podcast")'>
-                <img src="images/podcast-icon.png" alt="Podcast" class="content-icon" />
-                <p>Podcast</p>
+        @if (string.IsNullOrEmpty(selectedContentType))
+        {
+            <h1>Create Learning Material</h1>
+            <div class="content-types-container">
+                <div class="content-type" @onclick='() => SelectContentType("Podcast")'>
+                    <img src="images/podcast-icon.png" alt="Podcast" class="content-icon" />
+                    <p>Podcast</p>
+                </div>
+                <div class="content-type" @onclick='() => SelectContentType("Text")'>
+                    <img src="images/text-icon.png" alt="Text" class="content-icon" />
+                    <p>Text</p>
+                </div>
+                <div class="content-type" @onclick='() => SelectContentType("Photo")'>
+                    <img src="images/photo-icon.png" alt="Photo" class="content-icon" />
+                    <p>Photo</p>
+                </div>
+                <div class="content-type" @onclick='() => SelectContentType("Video")'>
+                    <img src="images/video-icon.png" alt="Video" class="content-icon" />
+                    <p>Video</p>
+                </div>
             </div>
-            <div class="content-type" @onclick='() => SelectContentType("Text")'>
-                <img src="images/text-icon.png" alt="Text" class="content-icon" />
-                <p>Text</p>
-            </div>
-            <div class="content-type" @onclick='() => SelectContentType("Photo")'>
-                <img src="images/photo-icon.png" alt="Photo" class="content-icon" />
-                <p>Photo</p>
-            </div>
-            <div class="content-type" @onclick='() => SelectContentType("Video")'>
-                <img src="images/video-icon.png" alt="Video" class="content-icon" />
-                <p>Video</p>
-            </div>
-        </div>
+        }
+        else
+        {
+            <EditForm Model="@learningMaterial" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="form-container">
+                    <button type="button" class="back-button" @onclick='() => SelectContentType(null)'>Back</button>
+                    <button type="submit" class="save-button">Save</button>
+
+                    <div class="form-fields">
+                        <h1>Create @selectedContentType</h1>
+                        <InputText @bind-Value="learningMaterial.Headline" placeholder="Headline" />
+                        <InputText @bind-Value="learningMaterial.Description" placeholder="Description" />
+
+                        @if (selectedContentType == "Podcast")
+                        {
+                            <InputText @bind-Value="currentPodcastContent.AudioUrl" placeholder="Audio URL" @oninput="UpdatePodcastContent" />
+                            <InputNumber @bind-Value="currentPodcastContent.Duration" placeholder="Duration" @oninput="UpdatePodcastContent" />
+                        }
+                        else if (selectedContentType == "Text")
+                        {
+                            <InputTextArea @bind-Value="currentTextContent.Body" placeholder="Body" @oninput="UpdateTextContent" />
+                        }
+                        else if (selectedContentType == "Photo")
+                        {
+                            <InputText @bind-Value="currentPhotoContent.ImageUrl" placeholder="Image URL" @oninput="UpdatePhotoContent" />
+                        }
+                        else if (selectedContentType == "Video")
+                        {
+                            <InputText @bind-Value="currentVideoContent.VideoUrl" placeholder="Video URL" @oninput="UpdateVideoContent" />
+                            <InputNumber @bind-Value="currentVideoContent.Duration" placeholder="Duration" @oninput="UpdateVideoContent" />
+                        }
+                    </div>
+
+                    <div class="form-preview">
+                        <h1>Preview</h1>
+                        <PreviewContent LearningMaterial="@learningMaterial" SelectedContentType="@selectedContentType" />
+                    </div>
+                </div>
+            </EditForm>
+        }
     }
     else
     {
-        <EditForm Model="@learningMaterial" OnValidSubmit="HandleSubmit">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-
-            <div class="form-container">
-                <button type="button" class="back-button" @onclick='() => SelectContentType(null)'>Back</button>
-                <button type="submit" class="save-button">Save</button>
-
-                <div class="form-fields">
-                    <h1>Create @selectedContentType</h1>
-                    <InputText @bind-Value="learningMaterial.Headline" placeholder="Headline" />
-                    <InputText @bind-Value="learningMaterial.Description" placeholder="Description" />
-
-                    @if (selectedContentType == "Podcast")
-                    {
-                        <InputText @bind-Value="currentPodcastContent.AudioUrl" placeholder="Audio URL" @oninput="UpdatePodcastContent" />
-                        <InputNumber @bind-Value="currentPodcastContent.Duration" placeholder="Duration" @oninput="UpdatePodcastContent" />
-                    }
-                    else if (selectedContentType == "Text")
-                    {
-                        <InputTextArea @bind-Value="currentTextContent.Body" placeholder="Body" @oninput="UpdateTextContent" />
-                    }
-                    else if (selectedContentType == "Photo")
-                    {
-                        <InputText @bind-Value="currentPhotoContent.ImageUrl" placeholder="Image URL" @oninput="UpdatePhotoContent" />
-                    }
-                    else if (selectedContentType == "Video")
-                    {
-                        <InputText @bind-Value="currentVideoContent.VideoUrl" placeholder="Video URL" @oninput="UpdateVideoContent" />
-                        <InputNumber @bind-Value="currentVideoContent.Duration" placeholder="Duration" @oninput="UpdateVideoContent" />
-                    }
-                </div>
-
-                <div class="form-preview">
-                    <h1>Preview</h1>
-                    <PreviewContent LearningMaterial="@learningMaterial" SelectedContentType="@selectedContentType" />
-                </div>
-            </div>
-        </EditForm>
+        <div class="alert alert-danger">
+            <strong>Access Denied:</strong> Only registered and logged-in users can create content. Please log in or register to continue.
+        </div>
     }
 </div>
 
 @code {
+    private bool isAuthenticated = false;
     private string? selectedContentType = null;
     private CreateLearningMaterial learningMaterial = new CreateLearningMaterial();
     private PodcastContent currentPodcastContent = new PodcastContent();
@@ -82,10 +92,27 @@
     private PhotoContent currentPhotoContent = new PhotoContent();
     private VideoContent currentVideoContent = new VideoContent();
 
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await LocalStorage.GetItemAsync<string>("authToken");
+        isAuthenticated = !string.IsNullOrEmpty(token);
+        
+        if (!isAuthenticated)
+        {
+            Console.WriteLine("User is not authenticated.");
+        }
+    }
+
     private async Task HandleSubmit()
     {
         var token = await LocalStorage.GetItemAsync<string>("authToken");
         
+        if (string.IsNullOrEmpty(token))
+        {
+            Console.WriteLine("User is not authenticated.");
+            return;
+        }
+
         learningMaterial.Contents.Clear();
 
         if (selectedContentType == "Podcast")
@@ -109,16 +136,32 @@
             learningMaterial.Contents.Add(currentVideoContent);
         }
 
-        var response = await LearningMaterialHttpClient.AddLearningMaterialAsync(learningMaterial, token);
+        try
+        {
+            
+            await LearningMaterialWebSocketService.ConnectAsync();
 
-        if (response != null)
-        {
-            ClearForms();
-            Navigation.NavigateTo("/UserProfile");
+            
+            var response = await LearningMaterialWebSocketService.AddLearningMaterialAsync(learningMaterial, token);
+
+            if (response != null)
+            {
+                ClearForms();
+                Navigation.NavigateTo("/UserProfile");
+            }
+            else
+            {
+                Console.WriteLine("Error creating learning material");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine("Error creating learning material");
+            Console.WriteLine($"Error during submission: {ex.Message}");
+        }
+        finally
+        {
+            // Ensure the WebSocket connection is closed
+            await LearningMaterialWebSocketService.CloseAsync();
         }
     }
 

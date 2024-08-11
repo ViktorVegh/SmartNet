@@ -17,20 +17,41 @@ namespace Services
             _authClient = authClient;
             _userService = userService;
         }
-
+        
         public async Task<string> RegisterUserAsync(RegisterUser user)
         {
+           
             ValidateRegisterUser(user);
 
-            
-            var existingUser = await _userService.GetUserByUsernameAsync(user.Username);
-            if (existingUser != null)
+            try
             {
-                throw new ArgumentException("Username already exists.", nameof(user.Username));
+               
+                var existingUser = await _userService.GetUserByUsernameAsync(user.Username);
+                if (existingUser != null)
+                {
+                  
+                    throw new ArgumentException("Username already exists.", nameof(user.Username));
+                }
+            }
+            catch (Exception ex)
+            {
+                
+                if (ex.Message.Contains("User not found"))
+                {
+                   
+                    return await _authClient.RegisterUserAsync(user);
+                }
+                else
+                {
+                  
+                    throw;
+                }
             }
 
-            return await _authClient.RegisterUserAsync(user);
+            
+            throw new ArgumentException("Username already exists.", nameof(user.Username));
         }
+
 
         public async Task<string> LoginUserAsync(LoginUser user)
         {

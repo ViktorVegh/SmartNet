@@ -1,13 +1,10 @@
 package com.backend.java;
 
-import com.backend.java.model.CreateLearningMaterial;
+import com.backend.java.model.DTOs.CreateLearningMaterial;
 import com.backend.java.model.PhotoContent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.Arrays;
-import java.util.Date;
 
 public class DeserializationTest {
 

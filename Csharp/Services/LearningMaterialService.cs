@@ -38,10 +38,7 @@ namespace Services
                 throw new UnauthorizedAccessException("Only registered users can create content.");
             }
 
-            if (learningMaterialDto.Contents == null || !learningMaterialDto.Contents.Any())
-            {
-                throw new ArgumentException("Learning material cannot be created without at least one content.");
-            }
+            ValidateLearningMaterial(learningMaterialDto);
 
             learningMaterialDto.UserId = userId;
             learningMaterialDto.CreatedAt = DateTime.UtcNow;
@@ -77,14 +74,10 @@ namespace Services
                 throw new UnauthorizedAccessException("You are not authorized to update this learning material.");
             }
 
-            if (learningMaterialDto.Contents == null || !learningMaterialDto.Contents.Any())
-            {
-                throw new ArgumentException("Learning material cannot be updated without at least one content.");
-            }
+            ValidateLearningMaterial(learningMaterialDto);
 
             existingLearningMaterial.Headline = learningMaterialDto.Headline;
             existingLearningMaterial.Description = learningMaterialDto.Description;
-            existingLearningMaterial.MembersOnly = learningMaterialDto.MembersOnly;
             existingLearningMaterial.UpdatedAt = DateTime.UtcNow;
 
             
@@ -113,10 +106,35 @@ namespace Services
 
             await _learningMaterialClient.DeleteLearningMaterialAsync(id);
         }
+        
+        public async Task<List<LearningMaterial>> GetLearningMaterialsByHeadlineAsync(string headlineSubstring)
+        {
+            var allMaterials = await _learningMaterialClient.GetAllLearningMaterialsAsync();
+            var filteredMaterials = allMaterials.Where(lm => lm.Headline.Contains(headlineSubstring, StringComparison.OrdinalIgnoreCase)).ToList();
+            return filteredMaterials;
+        }
 
         public async Task<List<LearningMaterial>> GetAllLearningMaterialsAsync()
         {
             return await _learningMaterialClient.GetAllLearningMaterialsAsync();
+        }
+
+        private void ValidateLearningMaterial(CreateLearningMaterial learningMaterialDto)
+        {
+            if (string.IsNullOrWhiteSpace(learningMaterialDto.Headline))
+            {
+                throw new ArgumentException("Headline cannot be empty.", nameof(learningMaterialDto.Headline));
+            }
+
+            if (string.IsNullOrWhiteSpace(learningMaterialDto.Description))
+            {
+                throw new ArgumentException("Description cannot be empty.", nameof(learningMaterialDto.Description));
+            }
+
+            if (learningMaterialDto.Contents == null || !learningMaterialDto.Contents.Any())
+            {
+                throw new ArgumentException("Learning material cannot be created without at least one content.");
+            }
         }
     }
 }

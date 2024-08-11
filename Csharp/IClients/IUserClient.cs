@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Models;
+using Models.DTOs;
 
 namespace IClients
 {
@@ -8,6 +9,8 @@ namespace IClients
     {
         Task<User> GetUserByIdAsync(long id);
         Task<User> GetUserByUsernameAsync(string username);
+        
+        Task<UserDto> GetUserDtoByIdAsync(long id);
         
     }
 }

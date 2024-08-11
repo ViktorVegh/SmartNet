@@ -1,7 +1,7 @@
 package com.backend.java.controller;
 
 import com.backend.java.iservice.ILearningMaterialService;
-import com.backend.java.model.CreateLearningMaterial;
+import com.backend.java.model.DTOs.CreateLearningMaterial;
 import com.backend.java.model.LearningMaterial;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

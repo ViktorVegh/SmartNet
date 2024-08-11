@@ -1,6 +1,7 @@
 package com.backend.java.controller;
 
 import com.backend.java.iservice.IUserService;
+import com.backend.java.model.DTOs.UserDto;
 import com.backend.java.model.LearningMaterial;
 import com.backend.java.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,16 @@ public class UserController {
         Optional<User> user = userService.findByUsername(username);
         if (user.isPresent()) {
             return ResponseEntity.ok(user.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+    }
+
+    @GetMapping("/dto/{id}")
+    public ResponseEntity<?> getUserDtoById(@PathVariable Long id) {
+        Optional<UserDto> userDto = userService.findUserDtoById(id);
+        if (userDto.isPresent()) {
+            return ResponseEntity.ok(userDto.get());
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }

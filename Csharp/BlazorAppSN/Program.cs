@@ -1,28 +1,28 @@
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using BlazorAppSN;
 using BlazorAppSN.Auth;
-using Blazored.LocalStorage;
-using IHttpClientsSN;
-using HttpClientsSN;
 using BlazorAppSN.Services;
+using Blazored.LocalStorage;
+using IWebSocketService;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using WebSocketService;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 
+builder.Logging.ClearProviders();
 
-builder.Services.AddScoped(sp => new HttpClient());
 
-// HTTP clients
-builder.Services.AddTransient<IAuthHttpClient, AuthHttpClient>();
-builder.Services.AddTransient<ILearningMaterialHttpClient, LearningMaterialHttpClient>();
-builder.Services.AddTransient<IUserHttpClient, UserHttpClient>();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
-// LocalStorage
+
+builder.Services.AddTransient<IAuthWebSocketService, AuthWebSocketService>();
+builder.Services.AddTransient<ILearningMaterialWebSocketService, LearningMaterialWebSocketService>();
+builder.Services.AddTransient<IUserWebSocketService, UserWebSocketService>();
+
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddBlazoredLocalStorage();

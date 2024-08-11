@@ -6,6 +6,7 @@ using Models;
 using IClients;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
+using Models.DTOs;
 
 public class UserClient : IUserClient
 {
@@ -33,6 +34,8 @@ public class UserClient : IUserClient
 
         var jsonResponse = await response.Content.ReadAsStringAsync();
         var user = JsonSerializer.Deserialize<User>(jsonResponse, options);
+        
+        Console.WriteLine($"User: {user.LearningMaterials.Count}");
 
         return user;
     }
@@ -57,7 +60,25 @@ public class UserClient : IUserClient
 
         var jsonResponse = await response.Content.ReadAsStringAsync();
         var user = JsonSerializer.Deserialize<User>(jsonResponse, options);
+        Console.WriteLine($"User: {user}");
 
         return user;
     }
+    
+    public async Task<UserDto> GetUserDtoByIdAsync(long id)
+    {
+        var response = await _httpClient.GetAsync($"/user/dto/{id}");
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+        response.EnsureSuccessStatusCode();
+    
+        var jsonResponse = await response.Content.ReadAsStringAsync();
+        var userDto = JsonSerializer.Deserialize<UserDto>(jsonResponse);
+    
+        return userDto;
+    }
+    
+
 }

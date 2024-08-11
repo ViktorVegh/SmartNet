@@ -1,9 +1,8 @@
 @page "/UserProfile"
 @page "/UserProfile/{Username}"
-@inject IHttpClientsSN.IUserHttpClient UserHttpClient
+@inject IWebSocketService.IUserWebSocketService UserWebSocketService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @using Models
-@using System.Net.Http
 @using Models.DTOs
 
 <NavMenu />
@@ -51,23 +50,28 @@
     <LearningMaterialModal LearningMaterial="@selectedMaterial" OnClose="CloseModal" IsOwner="isOwner" />
 }
 
-
-
 @code {
     [Parameter] public string? Username { get; set; }
     private User user;
     private bool showModal = false;
-    private LearningMaterial selectedMaterial; 
+    private LearningMaterial selectedMaterial;
     private bool isOwner = false;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            Console.WriteLine($"Starting");
+            await UserWebSocketService.ConnectAsync(); 
+            
+            Console.WriteLine("hhh");
+
             if (!string.IsNullOrEmpty(Username))
             {
-                user = await UserHttpClient.GetUserByUsernameAsync(Username);
-                isOwner = false; 
+                Console.WriteLine($"Retrieving user");
+                user = await UserWebSocketService.GetUserByUsernameAsync(Username);
+                Console.WriteLine($"Retrieved user: {user}");
+                isOwner = false;
             }
             else
             {
@@ -79,29 +83,31 @@
                     throw new InvalidOperationException("Token is null or empty");
                 }
 
-                user = await UserHttpClient.GetUserByTokenAsync(token);
+                user = await UserWebSocketService.GetUserByTokenAsync(token);
+                Console.WriteLine($"Retrieved user: {user.Username}");
+                
                 isOwner = true; // Owner's profile
             }
 
-            
-            Console.WriteLine($"Retrieved {user?.LearningMaterials?.Count} learning materials.");
-            foreach (var material in user.LearningMaterials)
+            if (user == null)
             {
-                Console.WriteLine($"Material: {material.Headline}, Description: {material.Description}, Contents Count: {material.Contents.Count}");
+                throw new InvalidOperationException("User not found");
             }
 
+            Console.WriteLine($"Retrieved {user.LearningMaterials?.Count} learning materials.");
+            
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex)
         {
             Console.Error.WriteLine($"Error fetching user profile: {ex.Message}");
             user = null;
         }
-        catch (Exception ex)
+        finally
         {
-            Console.Error.WriteLine($"Unexpected error: {ex.Message}");
-            user = null;
+            await UserWebSocketService.CloseAsync(); 
         }
     }
+
 
     private void OpenModal(LearningMaterial material, bool isOwner)
     {

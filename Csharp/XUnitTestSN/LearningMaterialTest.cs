@@ -37,7 +37,6 @@ namespace XUnitTestSN
             {
                 Headline = "Test Headline",
                 Description = "Test Description",
-                MembersOnly = false,
                 Contents = new List<Content> { new TextContent { Body = "Test Content" } }
             };
             var expectedLearningMaterial = new LearningMaterial { Headline = createLearningMaterialDto.Headline };
@@ -62,7 +61,6 @@ namespace XUnitTestSN
             {
                 Headline = "Test Headline",
                 Description = "Test Description",
-                MembersOnly = false,
                 Contents = new List<Content>()
             };
 
@@ -82,7 +80,6 @@ namespace XUnitTestSN
             {
                 Headline = "Test Headline",
                 Description = "Test Description",
-                MembersOnly = false,
                 Contents = new List<Content> { new TextContent { Body = "Test Content" } }
             };
 
@@ -192,7 +189,6 @@ namespace XUnitTestSN
             {
                 Headline = "Updated Headline",
                 Description = "Updated Description",
-                MembersOnly = false,
                 Contents = new List<Content> { new TextContent { Body = "Updated Content" } }
             };
             var existingLearningMaterial = new LearningMaterial { Id = learningMaterialId, UserId = userId };
@@ -220,7 +216,6 @@ namespace XUnitTestSN
             {
                 Headline = "Updated Headline",
                 Description = "Updated Description",
-                MembersOnly = false,
                 Contents = new List<Content>()
             };
             var existingLearningMaterial = new LearningMaterial { Id = learningMaterialId, UserId = userId };
@@ -244,7 +239,6 @@ namespace XUnitTestSN
             {
                 Headline = "Updated Headline",
                 Description = "Updated Description",
-                MembersOnly = false,
                 Contents = new List<Content> { new TextContent { Body = "Updated Content" } }
             };
             var existingLearningMaterial = new LearningMaterial { Id = learningMaterialId, UserId = 2L };

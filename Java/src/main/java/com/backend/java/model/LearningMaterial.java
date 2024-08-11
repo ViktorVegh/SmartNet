@@ -18,7 +18,6 @@ public class LearningMaterial {
 
     private String headline;
     private String description;
-    private boolean membersOnly;
     private Date createdAt;
     private Date updatedAt;
 
@@ -38,10 +37,9 @@ public class LearningMaterial {
 
     public LearningMaterial() {}
 
-    public LearningMaterial(String headline, String description, Boolean membersOnly, User user, Date createdAt, Date updatedAt, List<Content> contents) {
+    public LearningMaterial(String headline, String description, User user, Date createdAt, Date updatedAt, List<Content> contents) {
         this.headline = headline;
         this.description = description;
-        this.membersOnly = membersOnly;
         this.user = user;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -132,11 +130,4 @@ public class LearningMaterial {
                 '}';
     }
 
-    public boolean isMembersOnly() {
-        return membersOnly;
-    }
-
-    public void setMembersOnly(boolean membersOnly) {
-        this.membersOnly = membersOnly;
-    }
 }

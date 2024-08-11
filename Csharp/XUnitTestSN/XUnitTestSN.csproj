@@ -26,7 +26,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Clients\Clients.csproj" />
-      <ProjectReference Include="..\HttpClientsSN\HttpClientsSN.csproj" />
       <ProjectReference Include="..\Models\Models.csproj" />
       <ProjectReference Include="..\Services\Services.csproj" />
     </ItemGroup>

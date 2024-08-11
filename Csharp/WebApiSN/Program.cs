@@ -10,6 +10,8 @@ using System.Text;
 using Models;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Net.WebSockets;
+using WebApiSN.Handlers;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -113,8 +115,9 @@ builder.Services.AddTransient<ILearningMaterialService, LearningMaterialService>
 builder.Services.AddTransient<ILearningMaterialClient, LearningMaterialClient>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IUserClient, UserClient>();
-
-builder.Services.AddTransient<TokenHelper>();
+builder.Services.AddTransient<ITokenHelper, TokenHelper>();
+builder.Services.AddTransient<ISubscriptionClient, SubscriptionClient>();
+builder.Services.AddTransient<INotificationClient, NotificationClient>();
 
 // CORS policy
 builder.Services.AddCors(options =>
@@ -136,9 +139,67 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseWebSockets();
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/ws"))
+    {
+        if (context.WebSockets.IsWebSocketRequest)
+        {
+            var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+
+            if (context.Request.Path == "/ws/user")
+            {
+                var userService = context.RequestServices.GetRequiredService<IUserService>();
+                var userWebSocketHandler = new UserWebSocketHandler(userService);
+                await userWebSocketHandler.HandleWebSocketAsync(context, webSocket);
+            }
+            else if (context.Request.Path == "/ws/learning-material")
+            {
+                var learningMaterialService = context.RequestServices.GetRequiredService<ILearningMaterialService>();
+                var logger = context.RequestServices.GetRequiredService<ILogger<LearningMaterialWebSocketHandler>>();
+                var webSocketHandler = new LearningMaterialWebSocketHandler(learningMaterialService, logger);
+                await webSocketHandler.HandleWebSocketAsync(context, webSocket);
+            }
+            else if (context.Request.Path == "/ws/auth")
+            {
+                var authService = context.RequestServices.GetRequiredService<IAuthService>();
+                var logger = context.RequestServices.GetRequiredService<ILogger<AuthWebSocketHandler>>();
+                var authWebSocketHandler = new AuthWebSocketHandler(authService, logger);
+                await authWebSocketHandler.HandleWebSocketAsync(context, webSocket);
+            }
+            else if (context.Request.Path == "/ws/notification")
+            {
+                var notificationService = context.RequestServices.GetRequiredService<INotificationService>();
+                var notificationWebSocketHandler = new NotificationWebSocketHandler(notificationService);
+                await notificationWebSocketHandler.HandleWebSocketAsync(context, webSocket);
+            }
+            else if (context.Request.Path == "/ws/subscription")
+            {
+                var subscriptionService = context.RequestServices.GetRequiredService<ISubscriptionService>();
+                var subscriptionWebSocketHandler = new SubscriptionWebSocketHandler(subscriptionService);
+                await subscriptionWebSocketHandler.HandleWebSocketAsync(context, webSocket);
+            }
+            else
+            {
+                context.Response.StatusCode = 404; // Not Found
+            }
+        }
+        else
+        {
+            context.Response.StatusCode = 400; // Bad Request
+        }
+    }
+    else
+    {
+        await next();
+    }
+});
+
+
 app.UseHttpsRedirection();
 app.UseCors("AllowBlazorClient");
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
 app.Run();

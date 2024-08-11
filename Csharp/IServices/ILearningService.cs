@@ -12,5 +12,7 @@ namespace IServices
         Task<List<LearningMaterial>> GetAllLearningMaterialsAsync();
         Task<LearningMaterial> UpdateLearningMaterialAsync(long id, CreateLearningMaterial learningMaterial, string token);
         Task DeleteLearningMaterialAsync(long id, string token);
+
+        Task<List<LearningMaterial>> GetLearningMaterialsByHeadlineAsync(string headlineSubstring);
     }
 }

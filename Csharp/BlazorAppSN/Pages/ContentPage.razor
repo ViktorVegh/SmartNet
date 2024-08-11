@@ -1,7 +1,7 @@
 @page "/ContentPage"
 @using Models
 @using Models.DTOs
-@inject IHttpClientsSN.ILearningMaterialHttpClient LearningMaterialHttpClient
+@inject IWebSocketService.ILearningMaterialWebSocketService LearningMaterialWebSocketService
 
 <NavMenu />
 
@@ -40,7 +40,24 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        learningMaterials = await LearningMaterialHttpClient.GetAllLearningMaterialsAsync();
+        try
+        {
+            // Ensure WebSocket connection is established
+            await LearningMaterialWebSocketService.ConnectAsync(); 
+
+            // Fetch all learning materials through WebSocket
+            learningMaterials = await LearningMaterialWebSocketService.GetAllLearningMaterialsAsync();
+        }
+        catch (Exception ex)
+        {
+            // Handle any errors that occurred during WebSocket communication
+            Console.WriteLine($"Error loading learning materials: {ex.Message}");
+        }
+        finally
+        {
+            // Close the WebSocket connection
+            await LearningMaterialWebSocketService.CloseAsync(); 
+        }
     }
 
     private void OpenModal(LearningMaterial material)

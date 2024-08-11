@@ -2,6 +2,7 @@ package com.backend.java.service;
 
 import com.backend.java.iservice.ILearningMaterialService;
 import com.backend.java.model.*;
+import com.backend.java.model.DTOs.CreateLearningMaterial;
 import com.backend.java.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,7 +41,6 @@ public class LearningMaterialService implements ILearningMaterialService {
         LearningMaterial learningMaterial = new LearningMaterial(
                 dto.getHeadline(),
                 dto.getDescription(),
-                dto.isMembersOnly(),
                 user,
                 dto.getCreatedAt(),
                 dto.getUpdatedAt(),
@@ -88,7 +88,6 @@ public class LearningMaterialService implements ILearningMaterialService {
 
         existingMaterial.setHeadline(dto.getHeadline());
         existingMaterial.setDescription(dto.getDescription());
-        existingMaterial.setMembersOnly(dto.isMembersOnly());
         existingMaterial.setUpdatedAt(new java.util.Date());
 
         existingMaterial.getContents().clear();

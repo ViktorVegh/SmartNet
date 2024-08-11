@@ -1,5 +1,6 @@
-package com.backend.java.model;
+package com.backend.java.model.DTOs;
 
+import com.backend.java.model.Content;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.ArrayList;
@@ -9,7 +10,6 @@ import java.util.List;
 public class CreateLearningMaterial {
     private String headline;
     private String description;
-    private boolean membersOnly;
     private Long userId;
     private Date createdAt;
     private Date updatedAt;
@@ -25,7 +25,6 @@ public class CreateLearningMaterial {
     public CreateLearningMaterial(String headline, String description, Boolean membersOnly, Long userId, Date createdAt, Date updatedAt, List<Content> contents) {
         this.headline = headline;
         this.description = description;
-        this.membersOnly = membersOnly;
         this.userId = userId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -93,11 +92,4 @@ public class CreateLearningMaterial {
                 '}';
     }
 
-    public boolean isMembersOnly() {
-        return membersOnly;
-    }
-
-    public void setMembersOnly(boolean membersOnly) {
-        this.membersOnly = membersOnly;
-    }
 }
